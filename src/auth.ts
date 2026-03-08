@@ -3,7 +3,7 @@ import type {
 	AccessTokenResponse,
 	AuthCredentials,
 	AuthTokens,
-	RefreshTokenGrant,
+	ShotGridErrorResponse,
 } from '@types'
 import axios, { AxiosError, type AxiosInstance } from 'axios'
 
@@ -14,20 +14,6 @@ export interface AuthServiceOptions {
 	maxRetries?: number
 	retryBaseDelayMs?: number
 	httpClient?: AxiosInstance
-}
-
-export interface ShotGridErrorItem {
-	id?: string
-	status?: number
-	code?: number
-	title?: string
-	detail?: string
-	source?: unknown
-	meta?: unknown
-}
-
-export interface ShotGridErrorResponse {
-	errors?: ShotGridErrorItem[]
 }
 
 export class AuthServiceError extends Error {
@@ -82,7 +68,7 @@ export class AuthService {
 	}
 
 	async refresh(refreshToken: string): Promise<AuthTokens> {
-		const grant: RefreshTokenGrant = {
+		const grant: Extract<AuthCredentials, { grantType: 'refresh_token' }> = {
 			grantType: 'refresh_token',
 			refreshToken,
 		}
@@ -90,7 +76,7 @@ export class AuthService {
 	}
 
 	private async requestAccessToken(
-		credentials: AuthCredentials | RefreshTokenGrant,
+		credentials: AuthCredentials,
 	): Promise<AuthTokens> {
 		const payload = this.toFormPayload(credentials)
         const totalAttempts = this.maxRetries + 1
@@ -167,7 +153,7 @@ export class AuthService {
 	}
 
 	private toFormPayload(
-		credentials: AuthCredentials | RefreshTokenGrant,
+		credentials: AuthCredentials,
 	): URLSearchParams {
 		switch (credentials.grantType) {
 			case 'client_credentials':
@@ -218,7 +204,9 @@ export class AuthService {
 		return form
 	}
 
-	private toRefreshTokenForm(credentials: RefreshTokenGrant): URLSearchParams {
+	private toRefreshTokenForm(
+		credentials: Extract<AuthCredentials, { grantType: 'refresh_token' }>,
+	): URLSearchParams {
 		const form = new URLSearchParams()
 		form.set('grant_type', 'refresh_token')
 		form.set('refresh_token', credentials.refreshToken)

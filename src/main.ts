@@ -1,8 +1,8 @@
 import { AuthService } from '@auth'
 import { logger } from '@logger'
-import type { AuthCredentials, AuthProvider } from '@types'
+import type { AuthCredentials } from '@types'
 
-type SupportedGrantType = 'client_credentials' | 'password' | 'session_token'
+type SupportedGrantType = Exclude<AuthCredentials['grantType'], 'refresh_token'>
 type ApiVersion = 'v1' | 'v1.1'
 
 interface EnvConfig {
@@ -55,10 +55,6 @@ const buildCredentials = (): AuthCredentials => {
   }
 }
 
-const auth: AuthProvider = {
-  getCredentials: buildCredentials,
-}
-
 const maskToken = (token: string): string => {
   if (token.length <= 16) {
     return '***'
@@ -78,7 +74,7 @@ const run = async (): Promise<void> => {
     apiVersion,
   })
 
-  const credentials = await auth.getCredentials()
+  const credentials = buildCredentials()
   const tokens = await service.authenticate(credentials)
 
   const output = {
