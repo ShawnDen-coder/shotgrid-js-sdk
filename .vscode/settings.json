@@ -3,5 +3,8 @@
   "code-runner.executorMap": {
     "typescript": "pnpm --dir \"$workspaceRoot\" exec vite-node \"$fullFileName\"",
     "javascript": "pnpm --dir \"$workspaceRoot\" exec vite-node \"$fullFileName\""
-  }
+  },
+  "editor.guides.bracketPairs": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }
