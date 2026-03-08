@@ -5,7 +5,7 @@ import type {
 	AuthCredentials,
 	AuthTokens,
 	RefreshTokenGrant,
-} from './types'
+} from '@types'
 
 export interface AuthServiceOptions {
 	baseUrl: string

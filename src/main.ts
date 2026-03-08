@@ -1,5 +1,6 @@
-import { AuthService } from './auth'
-import type { AuthCredentials, AuthProvider } from './types'
+import { AuthService } from '@auth'
+import { logger } from '@logger'
+import type { AuthCredentials, AuthProvider } from '@types'
 
 type SupportedGrantType = 'client_credentials' | 'password' | 'session_token'
 type ApiVersion = 'v1' | 'v1.1'
@@ -58,9 +59,16 @@ const auth: AuthProvider = {
   getCredentials: buildCredentials,
 }
 
+const maskToken = (token: string): string => {
+  if (token.length <= 16) {
+    return '***'
+  }
+  return `${token.slice(0, 8)}...${token.slice(-8)}`
+}
+
 
 const run = async (): Promise<void> => {
-  console.info('ShotGrid auth debug started', {
+  logger.info('ShotGrid auth debug started', {
     grantType,
     apiVersion,
   })
@@ -78,13 +86,13 @@ const run = async (): Promise<void> => {
     tokenType: tokens.tokenType,
     expiresIn: tokens.expiresIn,
     expiresAt: new Date(tokens.expiresAt).toISOString(),
-    accessTokenPreview: tokens.accessToken,
-    refreshTokenPreview: tokens.refreshToken,
+    accessTokenPreview: maskToken(tokens.accessToken),
+    refreshTokenPreview: maskToken(tokens.refreshToken),
   }
 
-  console.log('ShotGrid auth success:', output)
+  logger.info('ShotGrid auth success', output)
 }
 
 void run().catch((error: unknown) => {
-  console.error('ShotGrid auth failed:', error)
+  logger.error('ShotGrid auth failed', error)
 })
