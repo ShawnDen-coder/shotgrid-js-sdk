@@ -1,7 +1,7 @@
 {
   "code-runner.runInTerminal": true,
   "code-runner.executorMap": {
-    "typescript": "cd $dir && pnpm exec tsx \"$fullFileName\"",
-    "javascript": "cd $dir && pnpm exec tsx \"$fullFileName\""
+    "typescript": "pnpm --dir \"$workspaceRoot\" exec vite-node \"$fullFileName\"",
+    "javascript": "pnpm --dir \"$workspaceRoot\" exec vite-node \"$fullFileName\""
   }
 }
