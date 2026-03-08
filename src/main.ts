@@ -1,5 +1,5 @@
 import { AuthService } from './auth'
-import type { AuthCredentials } from './types'
+import type { AuthCredentials, AuthProvider } from './types'
 
 type SupportedGrantType = 'client_credentials' | 'password' | 'session_token'
 type ApiVersion = 'v1' | 'v1.1'
@@ -54,12 +54,10 @@ const buildCredentials = (): AuthCredentials => {
   }
 }
 
-const maskToken = (token: string): string => {
-  if (token.length <= 16) {
-    return '***'
-  }
-  return `${token.slice(0, 8)}...${token.slice(-8)}`
+const auth: AuthProvider = {
+  getCredentials: buildCredentials,
 }
+
 
 const run = async (): Promise<void> => {
   console.info('ShotGrid auth debug started', {
@@ -72,7 +70,7 @@ const run = async (): Promise<void> => {
     apiVersion,
   })
 
-  const credentials = buildCredentials()
+  const credentials = await auth.getCredentials()
   const tokens = await service.authenticate(credentials)
 
   const output = {
@@ -80,8 +78,8 @@ const run = async (): Promise<void> => {
     tokenType: tokens.tokenType,
     expiresIn: tokens.expiresIn,
     expiresAt: new Date(tokens.expiresAt).toISOString(),
-    accessTokenPreview: maskToken(tokens.accessToken),
-    refreshTokenPreview: maskToken(tokens.refreshToken),
+    accessTokenPreview: tokens.accessToken,
+    refreshTokenPreview: tokens.refreshToken,
   }
 
   console.log('ShotGrid auth success:', output)
