@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/ShawnDen-coder/shotgrid-js-sdk/compare/v1.1.0...v1.1.1) (2026-03-09)
+
+
+### Bug Fixes
+
+* lint project ([0253515](https://github.com/ShawnDen-coder/shotgrid-js-sdk/commit/02535157f22d12abe08c5e85d1c116efcd684200))
+
 ## [1.1.0](https://github.com/ShawnDen-coder/shotgrid-js-sdk/compare/v1.0.0...v1.1.0) (2026-03-09)
 
 ### Features
