@@ -18,9 +18,7 @@ const client = new ShotGridClient({
 const result = await client.search<JsonApiResponse<ProjectRecord[]>>('Project', {
   filters: {
     logical_operator: 'and',
-    conditions: [
-      ['id', 'is', 122],
-    ],
+    conditions: [['id', 'is', 122]],
   },
   fields: ['id', 'name'],
 })

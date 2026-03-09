@@ -31,6 +31,5 @@ const minLevel = logLevelMap[env.VITE_LOG_LEVEL ?? env.LOG_LEVEL ?? 'info'] ?? 3
 export const logger = new Logger({
   name: 'shotgrid-js-sdk',
   minLevel,
-  prettyLogTemplate:
-    '{{yyyy}}-{{mm}}-{{dd}} {{hh}}:{{MM}}:{{ss}}.{{ms}} {{logLevelName}} | ',
+  prettyLogTemplate: '{{yyyy}}-{{mm}}-{{dd}} {{hh}}:{{MM}}:{{ss}}.{{ms}} {{logLevelName}} | ',
 })
