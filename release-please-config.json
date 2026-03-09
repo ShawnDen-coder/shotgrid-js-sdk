@@ -1,8 +1,0 @@
-{
-  "release-type": "node",
-  "bump-minor-pre-major": true,
-  "bump-patch-for-minor-pre-major": true,
-  "packages": {
-    ".": {}
-  }
-}
