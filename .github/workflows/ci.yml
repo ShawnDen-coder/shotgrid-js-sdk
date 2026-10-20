@@ -7,14 +7,12 @@ on:
 
 jobs:
   ci:
-    name: Type Check & Build
+    name: Type Check, Test & Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: latest
 
       - uses: actions/setup-node@v4
         with:
@@ -22,10 +20,22 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: Biome
+        run: pnpm lint
+
+      - name: Documentation parity and links
+        run: pnpm docs:check
 
       - name: Type check
         run: pnpm typecheck
 
+      - name: Test
+        run: pnpm test
+
       - name: Build
         run: pnpm build
+
+      - name: Package compatibility
+        run: pnpm test:package

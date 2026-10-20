@@ -1,0 +1,5 @@
+allowBuilds:
+  # esbuild installs the platform binary used by Vite and tsx.
+  esbuild: true
+  # Repository hooks are installed by our prepare script, not this dependency's postinstall.
+  lefthook: false

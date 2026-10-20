@@ -1,175 +1,79 @@
-import { logger } from '@logger'
-import { AuthService, AuthServiceError } from '@auth'
-import type {
-  AuthCredentials,
-  AuthTokens,
-  ShotGridClientOptions,
-  ShotGridErrorResponse,
-} from '@types'
-import { ShotGridClientError } from '@types'
-import axios, { AxiosError, type AxiosInstance } from 'axios'
+import axios from 'axios'
+import { resolveAuth } from './auth/grants'
+import { AuthService } from './auth/service'
+import { TokenManager } from './auth/token-manager'
+import { BatchService } from './entities/batch'
+import type { EntityQuery } from './entities/builder'
+import { EntityRepository } from './entities/repository'
+import { EntityService } from './entities/service'
+import { SummaryService } from './entities/summary'
+import { RestClient } from './http/rest-client'
+import { Transport } from './http/transport'
+import { SchemaService } from './schema/service'
+import type { EntityType, ShotGridClientOptions } from './types'
 
+/** Public composition root; business logic belongs to the individual services. */
 export class ShotGridClient {
-  private readonly authService: AuthService
-  private readonly httpClient: AxiosInstance
-  private readonly credentials: AuthCredentials
-  private readonly leewayMs: number
-  private tokens: AuthTokens | null = null
+  readonly rest: RestClient
+  readonly auth: Pick<TokenManager, 'authenticate'>
+  readonly schema: SchemaService
+  readonly find: EntityService['find']
+  readonly findOne: EntityService['findOne']
+  readonly iterate: EntityService['iterate']
+  readonly create: EntityService['create']
+  readonly update: EntityService['update']
+  readonly delete: EntityService['delete']
+  readonly revive: EntityService['revive']
+  readonly batch: BatchService['execute']
+  readonly summarize: SummaryService['summarize']
+  private readonly entities: EntityService
 
   constructor(options: ShotGridClientOptions) {
-    const normalizedBaseUrl = ShotGridClient.normalizeBaseUrl(options.baseUrl)
+    const baseUrl = options.baseUrl.replace(/\/+$/, '')
     const apiVersion = options.apiVersion ?? 'v1.1'
-    this.leewayMs = options.leewayMs ?? 30_000
-    this.credentials = options.credentials
-
-    this.httpClient = axios.create({
-      baseURL: `${normalizedBaseUrl}/api/${apiVersion}`,
-      timeout: options.timeoutMs ?? 15_000,
-      headers: { Accept: 'application/json' },
-    })
-
-    this.authService = new AuthService({
-      baseUrl: options.baseUrl,
-      apiVersion: options.apiVersion,
-      timeoutMs: options.timeoutMs,
-      maxRetries: options.maxRetries,
-      retryBaseDelayMs: options.retryBaseDelayMs,
-      httpClient: this.httpClient,
-    })
-  }
-
-  async get<T>(path: string, params?: Record<string, unknown>): Promise<T> {
-    return this.request<T>('GET', path, { params })
-  }
-
-  async post<T>(path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
-    return this.request<T>('POST', path, { data: body, params })
-  }
-
-  async search<T>(entityType: string, body?: unknown): Promise<T> {
-    return this.request<T>('POST', `/entity/${entityType}/_search`, {
-      data: body,
-      contentType: 'application/vnd+shotgun.api3_hash+json',
-    })
-  }
-
-  async put<T>(path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
-    return this.request<T>('PUT', path, { data: body, params })
-  }
-
-  async delete<T>(path: string, params?: Record<string, unknown>): Promise<T> {
-    return this.request<T>('DELETE', path, { params })
-  }
-
-  private async ensureValidToken(): Promise<string> {
-    if (this.tokens === null) {
-      logger.info('ShotGridClient: no token cached, authenticating', {
-        grantType: this.credentials.grantType,
+    const http =
+      options.httpClient ??
+      axios.create({
+        baseURL: `${baseUrl}/api/${apiVersion}`,
+        timeout: options.timeoutMs ?? 15_000,
+        headers: { Accept: 'application/json' },
       })
-      this.tokens = await ShotGridClient.acquireTokens(() =>
-        this.authService.authenticate(this.credentials),
-      )
-      return this.tokens.accessToken
-    }
-
-    if (this.tokens.expiresAt - this.leewayMs < Date.now()) {
-      logger.info('ShotGridClient: token near expiry, attempting refresh')
-      try {
-        this.tokens = await this.authService.refresh(this.tokens.refreshToken)
-      } catch (error) {
-        logger.warn('ShotGridClient: refresh failed, falling back to full auth', {
-          error: ShotGridClient.getErrorMessage(error),
-        })
-        this.tokens = await ShotGridClient.acquireTokens(() =>
-          this.authService.authenticate(this.credentials),
-        )
-      }
-    }
-
-    return this.tokens.accessToken
+    const source = options.auth ? resolveAuth(options.auth) : options.credentials
+    const tokens = new TokenManager(
+      new AuthService({ ...options, httpClient: http }),
+      source,
+      options.leewayMs,
+    )
+    this.auth = { authenticate: () => tokens.authenticate() }
+    this.rest = new RestClient(new Transport(http, tokens))
+    this.entities = new EntityService(this.rest)
+    this.schema = new SchemaService(this.rest)
+    this.find = this.entities.find.bind(this.entities)
+    this.findOne = this.entities.findOne.bind(this.entities)
+    this.iterate = this.entities.iterate.bind(this.entities)
+    this.create = this.entities.create.bind(this.entities)
+    this.update = this.entities.update.bind(this.entities)
+    this.delete = this.entities.delete.bind(this.entities)
+    this.revive = this.entities.revive.bind(this.entities)
+    const batches = new BatchService(this.rest)
+    this.batch = batches.execute.bind(batches)
+    const summaries = new SummaryService(this.rest)
+    this.summarize = summaries.summarize.bind(summaries)
   }
 
-  private async request<T>(
-    method: string,
-    path: string,
-    options?: { data?: unknown; params?: Record<string, unknown>; contentType?: string },
-  ): Promise<T> {
-    const accessToken = await this.ensureValidToken()
-
-    try {
-      const response = await this.httpClient.request<T>({
-        method,
-        url: path,
-        params: options?.params,
-        data: options?.data,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          ...(options?.contentType ? { 'Content-Type': options.contentType } : {}),
-        },
-      })
-      return response.data
-    } catch (error) {
-      throw ShotGridClient.toClientError(error)
-    }
+  entity<E extends EntityType>(entity: E): EntityRepository<E> {
+    return new EntityRepository(this.entities, entity)
   }
 
-  private static async acquireTokens(fn: () => Promise<AuthTokens>): Promise<AuthTokens> {
-    try {
-      return await fn()
-    } catch (error) {
-      if (error instanceof AuthServiceError) {
-        throw new ShotGridClientError(error.message, {
-          kind: 'auth_failed',
-          status: error.status,
-          code: error.code,
-          title: error.title,
-          detail: error.detail,
-          cause: error,
-        })
-      }
-      throw new ShotGridClientError('Authentication failed.', {
-        kind: 'auth_failed',
-        cause: error,
-      })
-    }
+  query<E extends EntityType>(entity: E): EntityQuery<E> {
+    return this.entity(entity).query()
   }
 
-  private static toClientError(error: unknown): ShotGridClientError {
-    if (error instanceof AxiosError) {
-      const status = error.response?.status
-      const errorPayload = error.response?.data as ShotGridErrorResponse | undefined
-      const firstError = errorPayload?.errors?.[0]
-
-      const detail = firstError?.detail
-      const title = firstError?.title
-      const code = firstError?.code
-
-      const message = detail ?? title ?? error.message ?? 'ShotGrid request failed.'
-
-      return new ShotGridClientError(message, {
-        kind: 'http_error',
-        status,
-        code,
-        title,
-        detail,
-        cause: error,
-      })
-    }
-
-    return new ShotGridClientError(ShotGridClient.getErrorMessage(error), {
-      kind: 'unexpected',
-      cause: error,
-    })
+  connect(): Promise<void> {
+    return this.auth.authenticate()
   }
-
-  private static normalizeBaseUrl(baseUrl: string): string {
-    return baseUrl.replace(/\/+$/, '')
-  }
-
-  private static getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-      return error.message
-    }
-    return 'Unknown error'
+  /** @deprecated Use connect() or auth.authenticate(). */
+  authenticate(): Promise<void> {
+    return this.connect()
   }
 }

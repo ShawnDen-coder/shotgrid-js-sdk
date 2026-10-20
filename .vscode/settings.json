@@ -1,10 +1,13 @@
 {
   "code-runner.runInTerminal": true,
   "code-runner.executorMap": {
-    "typescript": "pnpm --dir \"$workspaceRoot\" exec vite-node \"$fullFileName\"",
-    "javascript": "pnpm --dir \"$workspaceRoot\" exec vite-node \"$fullFileName\""
+    "typescript": "pnpm --dir \"$workspaceRoot\" exec tsx \"$fullFileName\"",
+    "javascript": "node \"$fullFileName\""
   },
   "editor.guides.bracketPairs": true,
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit"
+  }
 }

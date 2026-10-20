@@ -26,6 +26,10 @@ export class ShotGridClientError extends Error {
     this.code = options.code
     this.title = options.title
     this.detail = options.detail
-    this.cause = options.cause
+    Object.defineProperty(this, 'cause', {
+      value: options.cause,
+      configurable: true,
+      enumerable: false,
+    })
   }
 }

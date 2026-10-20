@@ -4,12 +4,12 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
-    "baseUrl": ".",
-    "paths": {
-      "@*": ["src/*", "src/*/index"]
-    },
+    "types": ["node"],
     "skipLibCheck": true,
+    "paths": {
+      "shotgrid-js-sdk": ["./src/index.ts"],
+      "shotgrid-js-sdk/types": ["./src/types/index.ts"]
+    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",
