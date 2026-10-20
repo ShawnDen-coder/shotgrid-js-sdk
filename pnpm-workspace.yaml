@@ -1,5 +1,7 @@
 allowBuilds:
   # esbuild installs the platform binary used by Vite and tsx.
   esbuild: true
+  # Vue Query uses vue-demi; select the adapter for the installed Vue version.
+  vue-demi: true
   # Repository hooks are installed by our prepare script, not this dependency's postinstall.
   lefthook: false
