@@ -1,5 +1,5 @@
+import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
-import { resolve } from 'path'
 import dts from 'vite-plugin-dts'
 
 export default defineConfig({
@@ -12,11 +12,8 @@ export default defineConfig({
       fileName: (format) => `index.${format === 'es' ? 'mjs' : 'cjs'}`,
     },
     rollupOptions: {
-      external: ['axios', 'tslog'],
+      external: ['axios'],
     },
   },
-  plugins: [dts({ rollupTypes: true })],
-  resolve: {
-    alias: [{ find: /^@(.+)$/, replacement: new URL('./src/$1', import.meta.url).pathname }],
-  },
+  plugins: [dts({ rollupTypes: true, tsconfigPath: './tsconfig.build.json' })],
 })

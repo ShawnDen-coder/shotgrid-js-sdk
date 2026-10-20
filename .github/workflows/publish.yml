@@ -22,8 +22,6 @@ jobs:
           ref: ${{ inputs.version && format('v{0}', inputs.version) || github.ref }}
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: latest
 
       - uses: actions/setup-node@v4
         with:
@@ -31,7 +29,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm build
@@ -42,6 +40,15 @@ jobs:
           path: |
             dist/
             package.json
+            README.md
+            README.zh-CN.md
+            CONTRIBUTING.md
+            CONTRIBUTING.zh-CN.md
+            CHANGELOG.md
+            LICENSE
+            docs/
+            examples/
+            scripts/install-hooks.mjs
 
   publish-npm:
     needs: build

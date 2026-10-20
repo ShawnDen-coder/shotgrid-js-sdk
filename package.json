@@ -2,7 +2,7 @@
   "name": "shotgrid-js-sdk",
   "version": "1.1.2",
   "type": "module",
-  "description": "JavaScript/TypeScript SDK for the ShotGrid REST API",
+  "description": "TypeScript SDK for Autodesk Flow Production Tracking (ShotGrid/Shotgun): typed fluent queries, REST API and OAuth authentication.",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -11,28 +11,83 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
+    },
+    "./types": {
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "docs",
+    "examples",
+    "scripts/install-hooks.mjs",
+    "CONTRIBUTING.md",
+    "README.zh-CN.md",
+    "CONTRIBUTING.zh-CN.md"
   ],
   "scripts": {
-    "fmt": "prettier . --write",
+    "fmt": "biome format --write .",
     "build": "vite build",
-    "typecheck": "tsc --noEmit"
-  },
-  "peerDependencies": {
-    "axios": "^1.0.0",
-    "tslog": "^4.0.0"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.tests.json",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:package": "node --test tests/package.test.mjs && tsc --noEmit -p tests/package/tsconfig.json",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "prepare": "node scripts/install-hooks.mjs",
+    "hooks:install": "lefthook install",
+    "docs:check": "node scripts/check-docs.mjs"
   },
   "devDependencies": {
-    "axios": "^1.13.6",
-    "prettier": "^3.8.1",
-    "tslog": "^4.10.2",
+    "@biomejs/biome": "2.5.15",
+    "@orpc/client": "1.15.7",
+    "@orpc/server": "1.15.7",
+    "@orpc/tanstack-query": "1.15.7",
+    "@tanstack/react-query": "5.104.4",
+    "@tanstack/vue-query": "5.104.4",
+    "@types/node": "^22.20.5",
+    "@types/react": "19.3.0",
+    "lefthook": "2.2.2",
+    "react": "19.3.1",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
-    "vite-node": "^5.3.0",
-    "vite-plugin-dts": "^4.5.4"
+    "vite-plugin-dts": "^4.5.4",
+    "vue": "3.5.44",
+    "zod": "4.6.7"
+  },
+  "packageManager": "pnpm@11.0.9",
+  "keywords": [
+    "shotgrid",
+    "shotgun",
+    "autodesk",
+    "flow-production-tracking",
+    "typescript",
+    "sdk",
+    "rest-api",
+    "oauth2",
+    "vfx",
+    "animation",
+    "production-tracking",
+    "full-stack",
+    "orpc"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShawnDen-coder/shotgrid-js-sdk.git"
+  },
+  "homepage": "https://github.com/ShawnDen-coder/shotgrid-js-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/ShawnDen-coder/shotgrid-js-sdk/issues"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "author": {
+    "name": "ShawnDen-coder",
+    "url": "https://github.com/ShawnDen-coder"
+  },
+  "dependencies": {
+    "axios": "^1.13.6"
   }
 }
